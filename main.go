@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 //go:embed files
@@ -18,17 +19,23 @@ type readable interface {
 	fs.ReadFileFS
 }
 
-type localFS string
+type localFS struct{ root string }
 
-func (l localFS) Open(name string) (fs.File, error)          { return os.Open(name) }
-func (l localFS) ReadDir(name string) ([]fs.DirEntry, error) { return os.ReadDir(name) }
-func (l localFS) ReadFile(name string) ([]byte, error)       { return os.ReadFile(name) }
+func (l localFS) Open(name string) (fs.File, error) {
+	return os.Open(filepath.Join(l.root, name))
+}
+func (l localFS) ReadDir(name string) ([]fs.DirEntry, error) {
+	return os.ReadDir(filepath.Join(l.root, name))
+}
+func (l localFS) ReadFile(name string) ([]byte, error) {
+	return os.ReadFile(filepath.Join(l.root, name))
+}
 
 func main() {
 	fmt.Println("Playing with embedded files")
 
 	fmt.Println("From local fs")
-	dumpFiles(localFS("."), "files")
+	dumpFiles(localFS{"."}, "files")
 
 	fmt.Println("***************************")
 
